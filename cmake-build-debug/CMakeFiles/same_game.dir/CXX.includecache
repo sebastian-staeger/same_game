@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/sebastian/CLionProjects/same_game/main.cpp
+iostream
+-
+vector
+-
+stdio.h
+-
+stdlib.h
+-
+time.h
+-
+tuple
+-
+
