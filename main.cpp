@@ -8,6 +8,9 @@
 
 using namespace std;
 
+#define BLACK       "\033[30;40;4m___\033[0m"
+#define WHITE       "\033[97;107;4m___\033[0m"
+
 std::tuple<int, int> zugeingabe(string zug);
 
 vector<vector<string>> search_and_color(vector<vector<string>> &feld);
@@ -15,6 +18,10 @@ vector<vector<string>> search_and_color(vector<vector<string>> &feld);
 vector<vector<string>> group(int i, int j, vector<vector<string>> &marked, const vector<vector<string>> &feld);
 
 vector<vector<string>> nachrutschen_spalte(vector<vector<string>> &feld);
+
+bool game_over(vector<vector<string>> &white_spot_field);
+
+int count_score(vector<vector<string>> &board_before_move, vector<vector<string>> &board_after_move);
 
 int main() {
 /*
@@ -113,14 +120,17 @@ int main() {
 
 */
     // implementation
+
     vector<vector<string> > game_board(9, vector<string>(9));
     vector<vector<string> > copy_game_board(9, vector<string>(9));
+    vector<vector<string> > white_board(9, vector<string>(9));
     vector<string> colors{"\033[31;41;4m___\033[0m", "\033[32;42;4m___\033[0m", "\033[33;43;4m___\033[0m",
                           "\033[34;44;4m___\033[0m", "\033[35;45;4m___\033[0m"};
+    int score = 0;
 
     // set colors
     //srand(time(NULL));
-    srand(7);
+    srand(2);
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < 9; j++) {
             int c = rand() % 5;
@@ -137,13 +147,10 @@ int main() {
     }
     cout << " A " << " B " << " C " << " D " << " E " << " F " << " G " << " H " << " I " << endl;
 
-
-    int counter = 0;
-    while(counter < 10){
-
+    do {
         copy_game_board = game_board;
 
-        cout << "Geben sie ihren zug ein (z. B. 'f3')";
+        cout << "Insert a move (e.g. 'f3')";
         string move_input;
         cin >> move_input;
         auto move = zugeingabe(move_input);
@@ -151,6 +158,8 @@ int main() {
         game_board = group(std::get<0>(move), std::get<1>(move), copy_game_board, game_board);
 
         game_board = nachrutschen_spalte(game_board);
+
+        white_board = search_and_color(game_board);
 
         for (int i = 0; i < game_board.size(); i++) {
 
@@ -160,8 +169,8 @@ int main() {
             cout << " " << i + 1 << endl;
         }
         cout << " A " << " B " << " C " << " D " << " E " << " F " << " G " << " H " << " I " << endl;
-        counter++;
-    }
+
+    } while (!game_over(white_board));
 
     return 0;
 }
@@ -205,44 +214,47 @@ vector<vector<string>> search_and_color(vector<vector<string>> &feld) {
     vector<vector<string>> white_spots = feld;
 
     for (int i = 0; i < white_spots.size(); i++) {
-
         for (int j = 0; j < white_spots[i].size(); j++) {
             if (i == 0 && j == 0) {
-                if (feld[i][j] == feld[i + 1][j] || feld[i][j] == feld[i][j + 1]) {
-                    white_spots[i][j] = "\033[97;107;4m___\033[0m";
+                if ((feld[i][j] == feld[i + 1][j] || feld[i][j] == feld[i][j + 1]) && feld[i][j] != BLACK) {
+                    white_spots[i][j] = WHITE;
                 }
             } else if (i == 0 && j == 8) {
-                if (feld[i][j] == feld[i + 1][j] || feld[i][j] == feld[i][j - 1]) {
-                    white_spots[i][j] = "\033[97;107;4m___\033[0m";
+                if ((feld[i][j] == feld[i + 1][j] || feld[i][j] == feld[i][j - 1]) && feld[i][j] != BLACK) {
+                    white_spots[i][j] = WHITE;
                 }
             } else if (i == 8 && j == 0) {
-                if (feld[i][j] == feld[i - 1][j] || feld[i][j] == feld[i][j + 1]) {
-                    white_spots[i][j] = "\033[97;107;4m___\033[0m";
+                if ((feld[i][j] == feld[i - 1][j] || feld[i][j] == feld[i][j + 1]) && feld[i][j] != BLACK) {
+                    white_spots[i][j] = WHITE;
                 }
             } else if (i == 8 && j == 8) {
-                if (feld[i][j] == feld[i - 1][j] || feld[i][j] == feld[i][j - 1]) {
-                    white_spots[i][j] = "\033[97;107;4m___\033[0m";
+                if ((feld[i][j] == feld[i - 1][j] || feld[i][j] == feld[i][j - 1]) && feld[i][j] != BLACK) {
+                    white_spots[i][j] = WHITE;
                 }
             } else if (i == 0 && j < 8 && j > 0) {
-                if (feld[i][j] == feld[i + 1][j] || feld[i][j] == feld[i][j - 1] || feld[i][j] == feld[i][j + 1]) {
-                    white_spots[i][j] = "\033[97;107;4m___\033[0m";
+                if ((feld[i][j] == feld[i + 1][j] || feld[i][j] == feld[i][j - 1] ||
+                    feld[i][j] == feld[i][j + 1]) && feld[i][j] != BLACK) {
+                    white_spots[i][j] = WHITE;
                 }
             } else if (j == 0 && i < 8 && i > 0) {
-                if (feld[i][j] == feld[i + 1][j] || feld[i][j] == feld[i][j + 1] || feld[i][j] == feld[i - 1][j]) {
-                    white_spots[i][j] = "\033[97;107;4m___\033[0m";
+                if ((feld[i][j] == feld[i + 1][j] || feld[i][j] == feld[i][j + 1] ||
+                    feld[i][j] == feld[i - 1][j]) && feld[i][j] != BLACK) {
+                    white_spots[i][j] = WHITE;
                 }
             } else if (i == 8 && j < 8 && j > 0) {
-                if (feld[i][j] == feld[i - 1][j] || feld[i][j] == feld[i][j + 1] || feld[i][j] == feld[i][j - 1]) {
-                    white_spots[i][j] = "\033[97;107;4m___\033[0m";
+                if ((feld[i][j] == feld[i - 1][j] || feld[i][j] == feld[i][j + 1] ||
+                    feld[i][j] == feld[i][j - 1]) && feld[i][j] != BLACK) {
+                    white_spots[i][j] = WHITE;
                 }
             } else if (j == 8 && i < 8 && i > 0) {
-                if (feld[i][j] == feld[i + 1][j] || feld[i][j] == feld[i][j - 1] || feld[i][j] == feld[i - 1][j]) {
-                    white_spots[i][j] = "\033[97;107;4m___\033[0m";
+                if ((feld[i][j] == feld[i + 1][j] || feld[i][j] == feld[i][j - 1] ||
+                    feld[i][j] == feld[i - 1][j]) && feld[i][j] != BLACK) {
+                    white_spots[i][j] = WHITE;
                 }
             } else {
-                if (feld[i][j] == feld[i + 1][j] || feld[i][j] == feld[i][j - 1] || feld[i][j] == feld[i - 1][j] ||
-                    feld[i][j] == feld[i][j + 1]) {
-                    white_spots[i][j] = "\033[97;107;4m___\033[0m";
+                if ((feld[i][j] == feld[i + 1][j] || feld[i][j] == feld[i][j - 1] || feld[i][j] == feld[i - 1][j] ||
+                    feld[i][j] == feld[i][j + 1]) && feld[i][j] != BLACK) {
+                    white_spots[i][j] = WHITE;
                 }
             }
         }
@@ -254,178 +266,178 @@ vector<vector<string>> group(int i, int j, vector<vector<string>> &marked, const
 
     //upper left corner
     if (i == 0 && j == 0) {
-        if (feld[i][j] == feld[i][j + 1] && marked[i][j + 1] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i][j + 1] && marked[i][j + 1] != BLACK) {
+            marked[i][j] = BLACK;
             group(i, j + 1, marked, feld);
         } else if (feld[i][j + 1] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i + 1][j] && marked[i + 1][j] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i + 1][j] && marked[i + 1][j] != BLACK) {
+            marked[i][j] = BLACK;
             group(i + 1, j, marked, feld);
         } else if (feld[i + 1][j] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
     }
     //lower left corner
     if (i == 8 && j == 0) {
-        if (feld[i][j] == feld[i][j + 1] && marked[i][j + 1] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i][j + 1] && marked[i][j + 1] != BLACK) {
+            marked[i][j] = BLACK;
             group(i, j + 1, marked, feld);
         } else if (feld[i][j + 1] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i - 1][j] && marked[i - 1][j] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i - 1][j] && marked[i - 1][j] != BLACK) {
+            marked[i][j] = BLACK;
             group(i - 1, j, marked, feld);
         } else if (feld[i - 1][j] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
     }
     //lower right corner
     if (i == 8 && j == 8) {
-        if (feld[i][j] == feld[i][j - 1] && marked[i][j - 1] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i][j - 1] && marked[i][j - 1] != BLACK) {
+            marked[i][j] = BLACK;
             group(i, j - 1, marked, feld);
         } else if (feld[i][j - 1] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i - 1][j] && marked[i - 1][j] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i - 1][j] && marked[i - 1][j] != BLACK) {
+            marked[i][j] = BLACK;
             group(i - 1, j, marked, feld);
         } else if (feld[i - 1][j] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
     }
     //upper right corner
     if (i == 0 && j == 8) {
-        if (feld[i][j] == feld[i][j - 1] && marked[i][j - 1] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i][j - 1] && marked[i][j - 1] != BLACK) {
+            marked[i][j] = BLACK;
             group(i, j - 1, marked, feld);
         } else if (feld[i][j - 1] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i + 1][j] && marked[i + 1][j] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i + 1][j] && marked[i + 1][j] != BLACK) {
+            marked[i][j] = BLACK;
             group(i + 1, j, marked, feld);
         } else if (feld[i + 1][j] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
     }
 
     //left side
     if (j == 0 && i < 8 && i > 0) {
-        if (feld[i][j] == feld[i][j + 1] && marked[i][j + 1] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i][j + 1] && marked[i][j + 1] != BLACK) {
+            marked[i][j] = BLACK;
             group(i, j + 1, marked, feld);
         } else if (feld[i][j + 1] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i + 1][j] && marked[i + 1][j] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i + 1][j] && marked[i + 1][j] != BLACK) {
+            marked[i][j] = BLACK;
             group(i + 1, j, marked, feld);
         } else if (feld[i + 1][j] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i - 1][j] && marked[i - 1][j] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i - 1][j] && marked[i - 1][j] != BLACK) {
+            marked[i][j] = BLACK;
             group(i - 1, j, marked, feld);
         } else if (feld[i - 1][j] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
     }
 
     //bottom side
     if (i == 8 && j < 8 && j > 0) {
-        if (feld[i][j] == feld[i][j + 1] && marked[i][j + 1] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i][j + 1] && marked[i][j + 1] != BLACK) {
+            marked[i][j] = BLACK;
             group(i, j + 1, marked, feld);
         } else if (feld[i][j + 1] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i][j - 1] && marked[i][j - 1] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i][j - 1] && marked[i][j - 1] != BLACK) {
+            marked[i][j] = BLACK;
             group(i, j - 1, marked, feld);
         } else if (feld[i][j - 1] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i - 1][j] && marked[i - 1][j] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i - 1][j] && marked[i - 1][j] != BLACK) {
+            marked[i][j] = BLACK;
             group(i - 1, j, marked, feld);
         } else if (feld[i - 1][j] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
     }
 
     //right side
     if (j == 8 && i < 8 && i > 0) {
-        if (feld[i][j] == feld[i][j - 1] && marked[i][j - 1] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i][j - 1] && marked[i][j - 1] != BLACK) {
+            marked[i][j] = BLACK;
             group(i, j - 1, marked, feld);
         } else if (feld[i][j - 1] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i + 1][j] && marked[i + 1][j] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i + 1][j] && marked[i + 1][j] != BLACK) {
+            marked[i][j] = BLACK;
             group(i + 1, j, marked, feld);
         } else if (feld[i + 1][j] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i - 1][j] && marked[i - 1][j] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i - 1][j] && marked[i - 1][j] != BLACK) {
+            marked[i][j] = BLACK;
             group(i - 1, j, marked, feld);
         } else if (feld[i - 1][j] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
     }
 
     //top side
     if (i == 0 && j < 8 && j > 0) {
-        if (feld[i][j] == feld[i][j + 1] && marked[i][j + 1] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i][j + 1] && marked[i][j + 1] != BLACK) {
+            marked[i][j] = BLACK;
             group(i, j + 1, marked, feld);
         } else if (feld[i][j + 1] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i][j - 1] && marked[i][j - 1] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i][j - 1] && marked[i][j - 1] != BLACK) {
+            marked[i][j] = BLACK;
             group(i, j - 1, marked, feld);
         } else if (feld[i][j - 1] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i + 1][j] && marked[i + 1][j] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i + 1][j] && marked[i + 1][j] != BLACK) {
+            marked[i][j] = BLACK;
             group(i + 1, j, marked, feld);
         } else if (feld[i + 1][j] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
     }
 
     //middle
     if (i < 8 && i > 0 && j < 8 && j > 0) {
-        if (feld[i][j] == feld[i][j + 1] && marked[i][j + 1] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i][j + 1] && marked[i][j + 1] != BLACK) {
+            marked[i][j] = BLACK;
             group(i, j + 1, marked, feld);
         } else if (feld[i][j + 1] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i][j - 1] && marked[i][j - 1] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i][j - 1] && marked[i][j - 1] != BLACK) {
+            marked[i][j] = BLACK;
             group(i, j - 1, marked, feld);
         } else if (feld[i][j - 1] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i + 1][j] && marked[i + 1][j] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i + 1][j] && marked[i + 1][j] != BLACK) {
+            marked[i][j] = BLACK;
             group(i + 1, j, marked, feld);
         } else if (feld[i + 1][j] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
-        if (feld[i][j] == feld[i - 1][j] && marked[i - 1][j] != "\033[30;40;4m___\033[0m") {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+        if (feld[i][j] == feld[i - 1][j] && marked[i - 1][j] != BLACK) {
+            marked[i][j] = BLACK;
             group(i - 1, j, marked, feld);
         } else if (feld[i - 1][j] == feld[i][j]) {
-            marked[i][j] = "\033[30;40;4m___\033[0m";
+            marked[i][j] = BLACK;
         }
     }
 
@@ -436,9 +448,9 @@ vector<vector<string>> nachrutschen_spalte(vector<vector<string>> &feld) {
     for (int k = 0; k < 9; k++) {
         for (int i = feld.size() - 1; i > 0; i--) {
             for (int j = feld.size() - 1; j >= 0; j--) {
-                if (feld[i][j] == "\033[30;40;4m___\033[0m" && feld[i - 1][j] != "\033[30;40;4m___\033[0m") {
+                if (feld[i][j] == BLACK && feld[i - 1][j] != BLACK) {
                     feld[i][j] = feld[i - 1][j];
-                    feld[i - 1][j] = "\033[30;40;4m___\033[0m";
+                    feld[i - 1][j] = BLACK;
                 }
             }
         }
@@ -446,3 +458,20 @@ vector<vector<string>> nachrutschen_spalte(vector<vector<string>> &feld) {
     return feld;
 }
 
+bool game_over(vector<vector<string>> &white_spot_field) {
+    for (int i = 0; i < white_spot_field.size(); i++) {
+        for (int j = 0; j < white_spot_field[i].size(); j++) {
+            if (white_spot_field[i][j] == WHITE) return false;
+        }
+    }
+    cout << "GAME OVER" << endl;
+    return true;
+}
+
+int count_score(vector<vector<string>> &board_before_move, vector<vector<string>> &board_after_move){
+    for (int i = 0; i < board_before_move.size(); i++) {
+        for (int j = 0; j < board_before_move[i].size(); j++) {
+
+        }
+    }
+}
