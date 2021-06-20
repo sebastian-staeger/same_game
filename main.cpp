@@ -17,6 +17,8 @@ vector<vector<string>> search_and_color(vector<vector<string>> &feld);
 
 vector<vector<string>> group(int i, int j, vector<vector<string>> &marked, const vector<vector<string>> &feld);
 
+vector<vector<string>> nachrutschen_zeile(vector<vector<string>> &feld);
+
 vector<vector<string>> nachrutschen_spalte(vector<vector<string>> &feld);
 
 bool game_over(vector<vector<string>> &white_spot_field);
@@ -24,101 +26,7 @@ bool game_over(vector<vector<string>> &white_spot_field);
 int count_score(vector<vector<string>> &game_board);
 
 int main() {
-/*
-    vector<vector<string> > spielfeld(9, vector<string>(9));
-    vector<vector<string> > marked(9, vector<string>(9));
-    vector<string> farben{"\033[31;41;4m___\033[0m", "\033[32;42;4m___\033[0m", "\033[33;43;4m___\033[0m",
-                          "\033[34;44;4m___\033[0m", "\033[35;45;4m___\033[0m"};
 
-    //srand(time(NULL));
-    srand(7);
-    for (int i = 0; i < 9; i++) {
-        for (int j = 0; j < 9; j++) {
-            int v1 = rand() % 5;
-            spielfeld[i][j] = farben[v1];
-        }
-    }
-    //KOPIE VOM SPIELFELD ANLEGEN
-    marked = spielfeld;
-
-    for (int i = 0; i < spielfeld.size(); i++) {
-
-        for (int j = 0; j < spielfeld[i].size(); j++) {
-            cout << spielfeld[i][j];
-        }
-        cout << " " << i + 1 << endl;
-    }
-    cout << " A " << " B " << " C " << " D " << " E " << " F " << " G " << " H " << " I " << endl;
-
-     DEBUG zugeingabe
-    auto zug = zugeingabe("d2");
-    cout << std::get<0>(zug) << std::get<1>(zug) << endl;
-    cout << spielfeld[std::get<0>(zug)][std::get<1>(zug)] << endl;
-
-
-    // FINDE ALLE STEINE DIE TEIL IRGENDEINER GRUPPE SIND UND FÄRBE SIE WEISS EIN
-    vector<vector<string>> haha = search_and_color(spielfeld);
-
-    for (int i = 0; i < haha.size(); i++) {
-
-        for (int j = 0; j < haha[i].size(); j++) {
-            cout << haha[i][j];
-        }
-        cout << " " << i + 1 << endl;
-    }
-    cout << endl;
-    auto zug = zugeingabe("c8");
-
-    // GRUPPE FINDEN UND SCHWARZ EINFÄRBEN
-    vector<vector<string>> hehe = group(std::get<0>(zug), std::get<1>(zug), marked, spielfeld);
-
-    for (int i = 0; i < hehe.size(); i++) {
-
-        for (int j = 0; j < hehe[i].size(); j++) {
-            cout << hehe[i][j];
-        }
-        cout << " " << i + 1 << endl;
-    }
-    cout << endl;
-
-    // NACHRUTSCHEN
-    vector<vector<string>> pushed_up = nachrutschen_spalte(hehe);
-
-    for (int i = 0; i < pushed_up.size(); i++) {
-
-        for (int j = 0; j < pushed_up[i].size(); j++) {
-            cout << pushed_up[i][j];
-        }
-        cout << " " << i + 1 << endl;
-    }
-    cout << endl;
-    //KOPIE VOM SPIELFELD ANLEGEN
-    vector<vector<string> > NAECHSTEMARKE(9, vector<string>(9));
-    NAECHSTEMARKE = pushed_up;
-
-    vector<vector<string>> NAECHSTERUNDE = group(std::get<0>(zug), std::get<1>(zug), NAECHSTEMARKE, pushed_up);
-
-    for (int i = 0; i < NAECHSTERUNDE.size(); i++) {
-
-        for (int j = 0; j < NAECHSTERUNDE[i].size(); j++) {
-            cout << NAECHSTERUNDE[i][j];
-        }
-        cout << " " << i + 1 << endl;
-    }
-
-    cout << endl;
-    vector<vector<string>> pushed_up1 = nachrutschen_spalte(NAECHSTERUNDE);
-
-    for (int i = 0; i < pushed_up1.size(); i++) {
-
-        for (int j = 0; j < pushed_up1[i].size(); j++) {
-            cout << pushed_up1[i][j];
-        }
-        cout << " " << i + 1 << endl;
-    }
-
-
-*/
     // implementation
 
     vector<vector<string> > game_board(9, vector<string>(9));
@@ -127,12 +35,12 @@ int main() {
     vector<string> colors{"\033[31;41;4m___\033[0m", "\033[32;42;4m___\033[0m", "\033[33;43;4m___\033[0m",
                           "\033[34;44;4m___\033[0m", "\033[35;45;4m___\033[0m"};
     int score_total = 0;
-    int score_after = 0;
-    int score_before = 0;
+    int score_after;
+    int score_before;
 
     // set colors
-    //srand(time(NULL));
-    srand(2);
+    srand(time(NULL)); // random board
+    // srand(12); //seed for testing
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < 9; j++) {
             int c = rand() % 5;
@@ -161,6 +69,8 @@ int main() {
 
         game_board = group(std::get<0>(move), std::get<1>(move), copy_game_board, game_board);
 
+        game_board = nachrutschen_zeile(game_board);
+
         game_board = nachrutschen_spalte(game_board);
 
         white_board = search_and_color(game_board);
@@ -178,9 +88,7 @@ int main() {
         }
         cout << " A " << " B " << " C " << " D " << " E " << " F " << " G " << " H " << " I " << endl;
 
-        cout << "SCORE: "<< score_total << endl;
-
-
+        cout << "SCORE: " << score_total << endl;
 
 
     } while (!game_over(white_board));
@@ -457,13 +365,29 @@ vector<vector<string>> group(int i, int j, vector<vector<string>> &marked, const
     return marked;
 }
 
-vector<vector<string>> nachrutschen_spalte(vector<vector<string>> &feld) {
+vector<vector<string>> nachrutschen_zeile(vector<vector<string>> &feld) {
     for (int k = 0; k < 9; k++) {
         for (int i = feld.size() - 1; i > 0; i--) {
             for (int j = feld.size() - 1; j >= 0; j--) {
                 if (feld[i][j] == BLACK && feld[i - 1][j] != BLACK) {
                     feld[i][j] = feld[i - 1][j];
                     feld[i - 1][j] = BLACK;
+                }
+            }
+        }
+    }
+    return feld;
+}
+
+vector<vector<string>> nachrutschen_spalte(vector<vector<string>> &feld) {
+
+    //outer counter loop to ensure mooving multiple columns in one move
+    for(int counter = 0; counter < 9; counter ++) {
+        for (int j = 0; j < 8; j++) {
+            if (feld[8][j] == BLACK) {
+                for (int i = 0; i < 9; i++) {
+                    feld[i][j] = feld[i][j + 1];
+                    feld[i][j + 1] = BLACK;
                 }
             }
         }
